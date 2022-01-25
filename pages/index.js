@@ -53,7 +53,7 @@ function Titulo(props) {
         <Tag>{props.children}</Tag>
         <style jsx>{`
               ${Tag} {
-                  color: ${appConfig.theme.colors.neutrals['000']};
+                  color: ${appConfig.theme.colors.neutrals['700']};
                   font-size: 24px;
                   font-weight: 600;
               }
@@ -113,8 +113,7 @@ export default function PaginaInicial() {
               }}
             >
               <Titulo tag="h2">Welcome back, Rider!</Titulo>
-              <Titulo styleSheet={{color: appConfig.theme.colors.neutrals[900]}}></Titulo>
-              <Text variant="body3" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals[100] }}>
+              <Text variant="h2" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals[600] }}>
                 {appConfig.name}
               </Text>
   
@@ -124,7 +123,7 @@ export default function PaginaInicial() {
                   neutral: {
                     textColor: appConfig.theme.colors.neutrals[500],
                     mainColor: appConfig.theme.colors.neutrals[900],
-                    mainColorHighlight: appConfig.theme.colors.primary[500],
+                    mainColorHighlight: appConfig.theme.colors.novasCores[400],
                     backgroundColor: appConfig.theme.colors.novasCores[100],
                   },
                 }}
@@ -136,8 +135,8 @@ export default function PaginaInicial() {
                 buttonColors={{
                   contrastColor: appConfig.theme.colors.neutrals["000"],
                   mainColor: appConfig.theme.colors.novasCores[500],
-                  mainColorLight: appConfig.theme.colors.novasCores[900],
-                  mainColorStrong: appConfig.theme.colors.novasCores[700],
+                  mainColorLight: appConfig.theme.colors.novasCores[100],
+                  mainColorStrong: appConfig.theme.colors.novasCores[400],
                 }}
               />
             </Box>
@@ -152,7 +151,7 @@ export default function PaginaInicial() {
                 alignItems: 'center',
                 maxWidth: '200px',
                 padding: '16px',
-                backgroundColor: appConfig.theme.colors.neutrals[800],
+                backgroundColor: appConfig.theme.colors.novasCores[800],
                 border: '1px solid',
                 borderColor: appConfig.theme.colors.neutrals[999],
                 borderRadius: '10px',
