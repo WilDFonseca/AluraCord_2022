@@ -37,11 +37,11 @@ export default function ChatPage() {
             }
             //Chamada de um backend
             //pode inverter ordem da lista (o que vem primeiro) de acordo com a ordem da ,
-            setListaDeMensagens{[
+            setListaDeMensagens([
                 mensagem,
                 ...listaDeMensagens,
                 
-            ]};
+            ]);
             setMensagem('');
         }
 
