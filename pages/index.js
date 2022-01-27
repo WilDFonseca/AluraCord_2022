@@ -106,12 +106,13 @@ export default function PaginaInicial() {
               <Text variant="h2" styleSheet={{ marginBottom: '32px', color: appConfig.theme.colors.neutrals[600] }}>
                 {appConfig.name}
               </Text>
-              onSubmit={function (infosDoEvento) {
+              Seu Github aqui:
+              {/*onSubmit={function (infosDoEvento) {
               infosDoEvento.preventDefault();
               console.log('Alguém submeteu o form');
               roteamento.push('/chat');
               // window.location.href = '/chat';
-            }}
+            }}*/}
               <TextField
                  value={username}
                  onChange={function (event) {
