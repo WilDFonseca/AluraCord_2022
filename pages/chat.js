@@ -2,6 +2,10 @@ import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
 
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMyOTgxNiwiZXhwIjoxOTU4OTA1ODE2fQ.Wy6pgnSXA9OsqfJQj49Ur8zJRSncJNoRBWK7i-z8BsY';
+const SUPABASE_URL ='https://pwcgqbuhhwrsziqrwxvb.supabase.co';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 //Next cria a página automaticamente, gerenciamento de página do next.
 /*mudar de página pode ser feito de vários jeitos:
 1- window.location.href ='/chat'; [Jeito tradicional]
@@ -26,22 +30,41 @@ export default function ChatPage() {
         const [mensagem, setMensagem] = React.useState('');
         const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
 
+        React.useEffect(() =>{ //Se o dado vem de um servidor ou precisa demorar pra acontecer(async), ele não participa do fluxo padrão, é um efeito colateral e precisa do useEffect.
+            //só está usando o useEffect na primeira vez que a página carrega.
+            supabaseClient
+            .from('mensagens'); //nome da tabela no supabase
+            .select('*');// * = tudo
+            .order('id', {ascending:false})//método do supabase
+            .then((data) => {
+                console.log('Dados da consulta', data);
+                setListaDeMensagens(data);
+        });
+        }[]) ;
+        
+
         function handleNovaMensagem(novaMensagem) { //handle novaMensagem > valor da mensagem que vai receber.
             //cada mensagem não vai ser só uma string, vai ser um objeto, pq tb tem timestamp e outros.
             //Objetos não podem ser React child, não pode só renderizar, tem que pegar e distribuir os valores.
             //Ou é um array de componente React ou um array de Strings.
             const mensagem ={
-                id: listaDeMensagens.leght + 1,
+                //id: listaDeMensagens.leght + 1,
                 de: 'Wil', //Nome travado que receberia do backend.
                 texto: novaMensagem,
             }
             //Chamada de um backend
-            //pode inverter ordem da lista (o que vem primeiro) de acordo com a ordem da ,
-            setListaDeMensagens([
-                mensagem,
-                ...listaDeMensagens,
-                
-            ]);
+            supabaseClient
+                .from('mensagens')
+                .insert([ //Tem que ser um objeto com os MESMOS CAMPOS que escreveu no supabase.
+                    mensagem
+                ])
+                .then((data) => {
+                    //console.log('Criando mensagem', data);
+                    setListaDeMensagens([ //pode inverter ordem da lista (o que vem primeiro) de acordo com a ordem da ,
+                        data[0],
+                        ...listaDeMensagens,    
+                    ]);
+                });
             setMensagem('');
         }
 
@@ -211,7 +234,7 @@ function MessageList(props) {
                             display: 'inline-block',
                             marginRight: '8px',
                         }}
-                        src={`https://github.com/vanessametonini.png`}
+                        src={`https://github.com/${mensagem.de}.png`} //tem $ pq já ta dentro de uma string; usar string: `crase`
                     />
                     <Text tag="strong">
                         {mensagem.de}
