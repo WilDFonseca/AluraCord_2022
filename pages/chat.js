@@ -1,6 +1,9 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
 import appConfig from '../config.json';
+import { useRouter } from 'next/router';
+import { createClient } from '@supabase/supabase-js'
+import { ButtonSendSticker } from '../src/components/ButtonSendSticker';
 
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzMyOTgxNiwiZXhwIjoxOTU4OTA1ODE2fQ.Wy6pgnSXA9OsqfJQj49Ur8zJRSncJNoRBWK7i-z8BsY';
 const SUPABASE_URL ='https://pwcgqbuhhwrsziqrwxvb.supabase.co';
@@ -15,6 +18,15 @@ import { useRouter } from 'next/router'; [é um Hook]
         roteamento.push('/chat');*/
 //Next tem um arquivo que encapsula todas as páginas a serem carregadas (config globais) fica no link Next Custom `App`. 
 
+function escutaMensagemEmTempoReal(adicionaMensagem) {
+    return supabaseClient
+        .from('mensagens')
+        .on('INSERT', (respostaLive) => {
+                adicionaMensagem(respostaLive.new);
+        })
+        .subscribe();
+}
+
 export default function ChatPage() {
     /*      Ações do usuário:
         -Usuário digita no campo textarea;
@@ -26,21 +38,39 @@ export default function ChatPage() {
         usar onChange para receber texto do usuário que usa o useState (ter if pra caso seja enter pra limpar a variável)
         Lista de mensagens (useStates)
     */
-
+        const roteamento = useRouter();
+        const usuarioLogado = roteamento.query.username;
+        //console.log('roteamento.query', roteamento.query);
+        //console;log('usuarioLogado, usuarioLogado);
         const [mensagem, setMensagem] = React.useState('');
         const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
 
         React.useEffect(() =>{ //Se o dado vem de um servidor ou precisa demorar pra acontecer(async), ele não participa do fluxo padrão, é um efeito colateral e precisa do useEffect.
             //só está usando o useEffect na primeira vez que a página carrega.
             supabaseClient
-            .from('mensagens'); //nome da tabela no supabase
-            .select('*');// * = tudo
-            .order('id', {ascending:false})//método do supabase
-            .then((data) => {
-                console.log('Dados da consulta', data);
-                setListaDeMensagens(data);
-        });
-        }[]) ;
+                .from('mensagens') //nome da tabela no supabase
+                .select('*')// * = tudo
+                .order('id', {ascending:false})//método do supabase
+                .then(({data}) => {
+                    //console.log('Dados da consulta', data);
+                    setListaDeMensagens(data);
+                });
+
+            const subscription = escutaMensagemEmTempoReal((novaMensagem) => {
+                console.log('Nova mensagem', novaMensagem);
+                //Quero reusar um valor de referencia (objeto/array) vc cai no caso  de:
+                //Passar uma função para o setState 
+                    setListaDeMensagens((valorAtualDaLista) => {
+                        return [
+                            novaMensagem,
+                            ...valorAtualDaLista,
+                        ]
+                    });
+            });
+            return () => {
+                subscription.unsubscribe();
+            }
+        },[]) ;
         
 
         function handleNovaMensagem(novaMensagem) { //handle novaMensagem > valor da mensagem que vai receber.
@@ -49,21 +79,22 @@ export default function ChatPage() {
             //Ou é um array de componente React ou um array de Strings.
             const mensagem ={
                 //id: listaDeMensagens.leght + 1,
-                de: 'Wil', //Nome travado que receberia do backend.
+                //Nome travado que receberia do backend;
+                de: usuarioLogado, //usuário que receberiamos do backend, mas está vindo do login no front.
                 texto: novaMensagem,
-            }
+            };
             //Chamada de um backend
             supabaseClient
                 .from('mensagens')
                 .insert([ //Tem que ser um objeto com os MESMOS CAMPOS que escreveu no supabase.
                     mensagem
                 ])
-                .then((data) => {
-                    //console.log('Criando mensagem', data);
-                    setListaDeMensagens([ //pode inverter ordem da lista (o que vem primeiro) de acordo com a ordem da ,
-                        data[0],
-                        ...listaDeMensagens,    
-                    ]);
+                .then(({data}) => {
+                    console.log('Criando mensagem', data);
+                    //setListaDeMensagens([ //pode inverter ordem da lista (o que vem primeiro) de acordo com a ordem da ,
+                    //    data[0],
+                    //    ...listaDeMensagens,    
+                    //]);
                 });
             setMensagem('');
         }
@@ -85,7 +116,7 @@ export default function ChatPage() {
                     flex: 1,
                     boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
                     borderRadius: '5px',
-                    backgroundColor: appConfig.theme.colors.neutrals[700],
+                    backgroundColor: appConfig.theme.colors.novasCores[700],
                     height: '100%',
                     maxWidth: '95%',
                     maxHeight: '95vh',
@@ -168,6 +199,12 @@ export default function ChatPage() {
                                 color: appConfig.theme.colors.neutrals[200],
                             }}
                         />
+                        {/**CallBack (chamada de retorno; quando alguma coisa que vc chamou, terminou, ele retorna*/}
+                        <ButtonSendSticker 
+                            onStickerClick={(sticker) => {
+                                handleNovaMensagem(':sticker: ' + sticker);
+                            }}
+                        />    
                     </Box>
                 </Box>
             </Box>
@@ -179,8 +216,8 @@ function Header() {
     return (
         <>
             <Box styleSheet={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
-                <Text variant='heading5'>
-                    Chat
+                <Text variant='heading4'>
+                    WillChat
                 </Text>
                 <Button
                     variant='tertiary'
@@ -194,7 +231,7 @@ function Header() {
 }
 //como cada função é isolada, tenho que passar o texto da mensagem como argumento via props
 function MessageList(props) {
-    console.log('MessageList', props);
+    //console.log('MessageList', props);
     return (
         <Box
             tag="ul"
@@ -250,7 +287,20 @@ function MessageList(props) {
                         {(new Date().toLocaleDateString())}
                     </Text>
                 </Box>
-                {mensagem.texto}
+                {/*Uso de condicional no React:
+                Modo Declaratvio (vc declara o que quer que retorne, descreve: se for assim, vai pra lá); if normal dá ordem, se isso, faz aquilo.
+                if  mensagem de texto possui stickers: renderiza imagem, else texto*/}
+                {mensagem.texto.startsWith(':sticker:') //Condicional, if
+                 ?  ( //verifica condição
+                     <Image src={mensagem.texto.replace(':sticker:', '')} /> //chamar imagem e retirar sticker do nome.
+                    )
+                    : ( //else
+                    mensagem.texto
+                )}
+                {/* if mensagem de texto possui stickers:
+                           mostra a imagem
+                        else 
+                           mensagem.texto */}
             </Text>
                 )
             })}

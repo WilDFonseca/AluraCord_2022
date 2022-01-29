@@ -94,7 +94,7 @@ export default function PaginaInicial() {
               onSubmit={function (infosDoEvento) {
                 infosDoEvento.preventDefault();
                 console.log('Alguém submeteu o form');
-                roteamento.push('/chat');
+                roteamento.push(`/chat?username=${username}`);//também pode ser feito: ('/chat?username=' + username): 
                 // window.location.href = '/chat';
               }}
               styleSheet={{
